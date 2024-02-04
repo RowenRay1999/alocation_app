@@ -1,15 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
-
-    <com.baidu.mapapi.map.MapView
-        android:id="@+id/bmapView"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="viewmodel"
+            type="com.rowen.alocation.vm.MainViewModel" />
+    </data>
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clickable="true" />
+        tools:context=".map.MainActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.baidu.mapapi.map.MapView
+            android:id="@+id/bmapView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="true" />
+
+        <ImageButton
+            android:id="@+id/bt_user"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/btn_bg"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="10dp"
+            />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/search_bar"
+            android:layout_width="300dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="30dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/search_shape"
+            >
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/tool_bar"
+            android:layout_width="40dp"
+            android:layout_height="140dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginEnd="10dp"
+            android:layout_gravity="right"
+            android:background="@drawable/tool_bar_shape"
+            >
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/bottom_sheet"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:behavior_hideable="true"
+            app:behavior_middleHeight="300dp"
+            app:behavior_peekHeight="100dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            app:layout_behavior=".view.GaoDeBottomSheetBehavior">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:visibility="visible"
+                tools:ignore="MissingPrefix">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/layout_bottom_sheet"
+                    android:layout_width="match_parent"
+                    android:gravity="center"
+                    android:text="@{viewmodel.posiInfo}"
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="30sp"
+                    android:layout_height="100dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="@drawable/shape_header"
+                    android:orientation="vertical" />
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+        </androidx.core.widget.NestedScrollView>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

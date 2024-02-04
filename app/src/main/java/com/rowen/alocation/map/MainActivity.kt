@@ -1,36 +1,76 @@
-package com.rowen.alocation
+package com.rowen.alocation.map
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageButton
+import androidx.annotation.NonNull
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.RecyclerView
 import com.baidu.location.LocationClient
 import com.baidu.location.LocationClientOption
 import com.baidu.mapapi.map.*
 import com.baidu.mapapi.map.BaiduMap.OnMapClickListener
 import com.baidu.mapapi.model.LatLng
 import com.baidu.mapapi.search.poi.*
+import com.rowen.alocation.R
+import com.rowen.alocation.constant.CommonConstants
+import com.rowen.alocation.databinding.ActivityMainBinding
 
+import com.rowen.alocation.user.LoginActivity
+import com.rowen.alocation.user.UserCenterActivity
+import com.rowen.alocation.utils.RecyclerDataUtils
+import com.rowen.alocation.view.GaoDeBottomSheetBehavior
+import com.rowen.alocation.vm.MainViewModel
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        // 在伴生对象中获取类名
+        val TAG = this::class.java.simpleName
+    }
+
     private val requestPermissions = arrayOf<String>(
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.ACCESS_FINE_LOCATION)
 
+    private var mbinding: ActivityMainBinding? = null
+
     private var mMapView: MapView? = null
     private var mBaiduMap: BaiduMap? = null
     private var mUiSettings: UiSettings? = null
     private var mLocationClient: LocationClient? =null
     private var mPoiSearch: PoiSearch? = null
+    private var mBtUser: ImageButton? = null
+
+    private var mViewModel: MainViewModel? = null
+    private var mLoginStatus: Int? = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        mbinding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(mbinding?.root)
+        var actionBar = supportActionBar
+        actionBar?.hide()
+        mViewModel = MainViewModel(this)
+        mbinding?.viewmodel = mViewModel
+//        ImmersionBar.with(this)
+//            .statusBarDarkFont(true)
+//            .fitsSystemWindows(false)
+//            .init()
+
         //获取地图控件引用
         ActivityCompat.requestPermissions(this, requestPermissions, 10086);
-        mMapView = findViewById<View>(R.id.bmapView) as MapView
+        mMapView = mbinding?.bmapView
+        initData()
         initView()
         initLocation()
     }
@@ -59,6 +99,7 @@ class MainActivity : AppCompatActivity() {
         mUiSettings?.isCompassEnabled = isShowCompass;
         mBaiduMap?.setIndoorEnable(true);
         mPoiSearch = PoiSearch.newInstance();
+        mBtUser = mbinding?.btUser
 
         val onMapClickListener: OnMapClickListener = object : OnMapClickListener {
             /**
@@ -109,6 +150,53 @@ class MainActivity : AppCompatActivity() {
         }
 
         mPoiSearch?.setOnGetPoiSearchResultListener(onGetPoiSearchResultListener)
+
+        val recyclerview = findViewById<RecyclerView>(R.id.recyclerview)
+        RecyclerDataUtils.setRecyclerAdater(this, recyclerview, "测试数据", 50)
+        val bottom_sheet = findViewById<ViewGroup>(com.rowen.alocation.R.id.bottom_sheet)
+        val behavior: GaoDeBottomSheetBehavior<*> = GaoDeBottomSheetBehavior.from(bottom_sheet)
+        behavior.setBottomSheetCallback(object : GaoDeBottomSheetBehavior.BottomSheetCallback() {
+            @SuppressLint("WrongConstant")
+            override fun onStateChanged(@NonNull bottomSheet: View, newState: Int) {
+                when (newState) {
+                    1 ->                         //过渡状态此时用户正在向上或者向下拖动bottom sheet
+                        Log.e(TAG, "====用户正在向上或者向下拖动")
+                    2 ->                         // 视图从脱离手指自由滑动到最终停下的这一小段时间
+                        Log.e(TAG, "====视图从脱离手指自由滑动到最终停下的这一小段时间")
+                    3 ->                         //处于完全展开的状态
+                        Log.e(TAG, "====处于完全展开的状态")
+                    4 ->                         //默认的折叠状态
+                        Log.e(TAG, "====默认的折叠状态")
+                    5 ->                         //下滑动完全隐藏 bottom sheet
+                        Log.e(TAG, "====下滑动完全隐藏")
+                    6 ->                         //下滑动完全隐藏 bottom sheet
+                        Log.e(TAG, "====中间位置")
+                }
+            }
+
+            override fun onSlide(@NonNull bottomSheet: View, slideOffset: Float) {
+                Log.e(TAG, "====slideOffset=$slideOffset")
+            }
+        })
+
+        var bitmap = BitmapDescriptorFactory.fromResource(R.drawable.user).bitmap
+
+        mBtUser?.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 40, 40, false))
+        mBtUser?.setOnClickListener {
+            mLoginStatus?.let {
+                if (it >= CommonConstants.USER.USER_LOGIN_STATUS_LOGIN) {
+                    val newIntent = Intent(this, UserCenterActivity::class.java)
+                    newIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(newIntent)
+                } else {
+                    val newIntent = Intent(this, LoginActivity::class.java)
+                    newIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(newIntent)
+                }
+            }
+
+
+        }
     }
 
     private fun initLocation() {
@@ -148,6 +236,15 @@ class MainActivity : AppCompatActivity() {
         }
         //开启地图定位图层
         mLocationClient?.start()
+    }
+
+    fun initData() {
+        mViewModel?.getLoginStatus()?.observe(this, Observer { status ->
+            mLoginStatus = status
+            when(status) {
+                CommonConstants.USER.USER_LOGIN_STATUS_LOGIN -> {}
+            }
+        })
     }
 
     override fun onDestroy() {

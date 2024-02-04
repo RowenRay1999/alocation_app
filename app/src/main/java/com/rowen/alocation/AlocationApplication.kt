@@ -2,6 +2,7 @@ package com.rowen.alocation
 
 import android.Manifest
 import android.app.Application
+import android.os.Build
 import androidx.core.app.ActivityCompat
 import com.baidu.location.LocationClient
 import com.baidu.mapapi.CoordType
@@ -18,5 +19,6 @@ class AlocationApplication: Application() {
         SDKInitializer.initialize(this);
         LocationClient.setAgreePrivacy(true);
         SDKInitializer.setCoordType(CoordType.BD09LL);
+
     }
 }
